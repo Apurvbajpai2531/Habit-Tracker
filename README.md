@@ -17,8 +17,3 @@ Idea simple hai: roz apne habits (jaise gym, padhai, paani peena) check-in karo 
 
 
 
-------------------------------------------------------------------------
-Built and deployed a production-like DevOps system using Kubernetes,
-ArgoCD (GitOps), Prometheus, and Grafana.
-------------------------------------------------------------------------------------
->>>>>>> 15f8240b92093295a776aae4906710296d474a8f
