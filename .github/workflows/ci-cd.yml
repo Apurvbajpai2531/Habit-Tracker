@@ -1,0 +1,85 @@
+name: CI-CD
+
+# Yeh workflow har push aur pull request par chalega "main" branch ke liye
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ---------- 1) CI: build + test ----------
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: habit_user
+          POSTGRES_PASSWORD: habit_pass
+          POSTGRES_DB: habit_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U habit_user -d habit_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Repo checkout karo
+        uses: actions/checkout@v4
+
+      - name: Python setup karo
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Backend dependencies install karo
+        run: pip install -r backend/requirements.txt
+
+      - name: Backend import / sanity check
+        env:
+          DATABASE_URL: postgresql://habit_user:habit_pass@localhost:5432/habit_db
+        run: |
+          cd backend
+          python -c "import app; print('Backend import OK ✅')"
+
+      - name: Frontend dependencies install karo
+        run: pip install -r frontend/requirements.txt
+
+      - name: Frontend syntax check
+        run: python -m py_compile frontend/app.py
+
+      - name: Docker images build karo (sirf test, push nahi)
+        run: |
+          docker build -t habit-backend:test ./backend
+          docker build -t habit-frontend:test ./frontend
+
+  # ---------- 2) CD: Docker Hub par image push (sirf main branch par) ----------
+  build-and-push:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo checkout karo
+        uses: actions/checkout@v4
+
+      - name: Docker Hub login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Backend image build aur push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/habit-backend:latest
+
+      - name: Frontend image build aur push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/habit-frontend:latest
