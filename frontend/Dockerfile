@@ -22,8 +22,13 @@ FROM python:3.12-slim as runner
 
 WORKDIR /app
 
-RUN addgroup --system app && adduser --system --group app
+#RUN addgroup --system app && adduser --system --group app
+RUN addgroup --system app \
+    && adduser --system --group --home /home/app app \
+    && mkdir -p /home/app/.streamlit \
+    && chown -R app:app /home/app
 
+    
 COPY --from=builder /install /usr/local
 # Copy app code
 COPY --chown=app:app . .
