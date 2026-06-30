@@ -1,0 +1,54 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+
+jobs:
+  frontend-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        working-directory: ./frontend
+        run: python -m py_compile app.py
+
+      - name: Build Docker image
+        run: docker build -t habit-tracker-fe ./frontend
+
+      - name: Run frontend container
+        run: |
+          docker run -d --name frontend-test -p 8501:8501 habit-tracker-fe
+
+      - name: Wait for startup
+        run: sleep 10
+
+      - name: Check container logs
+        run: docker logs frontend-test
+
+      - name: Verify container is running
+        run: docker ps | grep frontend-test
+
+      - name: Cleanup container
+        run: |
+          docker stop frontend-test || true
+          docker rm frontend-test || true

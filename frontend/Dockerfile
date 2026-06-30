@@ -31,7 +31,6 @@ RUN addgroup --system app \
   # We add ENV HOME=/home/app because Streamlit needs to know where to write its settings, 
   # and without telling it the right folder, it tries the wrong place and crashes.
 
-PYTHONUNBUFFERED=1
 ENV HOME=/home/app \
     PYTHONUNBUFFERED=1
 
