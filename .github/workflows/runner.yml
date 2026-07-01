@@ -1,0 +1,37 @@
+name: Github Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ubuntu Runner
+        run: |
+          echo "This is the Ubuntu runner"
+          hostname
+          whoami
+
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Windows Runner
+        run: |
+          echo "This is the Windows runner"
+          hostname
+          whoami
+
+  macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: MacOS Runner
+        run: |
+          echo "This is the MacOS runner"
+          hostname
+          whoami
