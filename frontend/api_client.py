@@ -25,11 +25,11 @@ def _handle_response(resp):
     try:
         payload = resp.json()
     except ValueError:
-        raise APIError("Server se invalid response aaya", resp.status_code)
+        raise APIError("Invalid server response", resp.status_code)
 
     if not resp.ok or not payload.get("success", True):
         raise APIError(
-            payload.get("message", "Kuch error aaya"),
+            payload.get("message", "Error occurred"),
             resp.status_code,
             payload.get("details"),
         )
@@ -47,56 +47,56 @@ def _request(method, path, json=None, params=None, timeout=8):
             timeout=timeout,
         )
     except requests.ConnectionError:
-        raise APIError("Backend se connect nahi ho paya. Backend chal raha hai kya?")
+        raise APIError("Backend not reachable")
     except requests.Timeout:
-        raise APIError("Backend response dene me bahut time le raha hai")
+        raise APIError("Backend timeout")
 
     return _handle_response(resp)
 
 
 # ---------- Auth ----------
 def register(email, password):
-    return _request(
-        "POST", "/api/auth/register", json={"email": email, "password": password}
-    )
+    return _request("POST", "/api/auth/register", json={"email": email, "password": password})
 
 
 def login(email, password):
-    return _request(
-        "POST", "/api/auth/login", json={"email": email, "password": password}
-    )
+    return _request("POST", "/api/auth/login", json={"email": email, "password": password})
 
 
 def get_me():
     return _request("GET", "/api/auth/me")
 
 
-# ---------- Habits ----------
+# ---------- Habits (FIXED ROUTES) ----------
 def list_habits(page=1, per_page=20):
-    return _request("GET", "/api/habits", params={"page": page, "per_page": per_page})
+    return _request("GET", "/api", params={"page": page, "per_page": per_page})
 
 
 def create_habit(name, category="general"):
-    return _request("POST", "/api/habits", json={"name": name, "category": category})
+    return _request("POST", "/api", json={"name": name, "category": category})
 
 
 def delete_habit(habit_id):
-    return _request("DELETE", f"/api/habits/{habit_id}")
+    return _request("DELETE", f"/api/{habit_id}")
 
 
 def checkin(habit_id, mood, note=None):
     return _request(
-        "POST", f"/api/habits/{habit_id}/checkin", json={"mood": mood, "note": note}
+        "POST",
+        f"/api/{habit_id}/checkin",
+        json={"mood": mood, "note": note},
     )
 
 
 def get_checkins(habit_id):
-    return _request("GET", f"/api/habits/{habit_id}/checkins")
+    return _request("GET", f"/api/{habit_id}/checkins")
 
 
+# ---------- Leaderboard ----------
 def get_leaderboard():
-    return _request("GET", "/api/habits/leaderboard")
+    return _request("GET", "/api/leaderboard")
 
 
+# ---------- Insights ----------
 def get_insights(habit_id):
-    return _request("GET", f"/api/habits/{habit_id}/insights")
+    return _request("GET", f"/api/{habit_id}/insights")
